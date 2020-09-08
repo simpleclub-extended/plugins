@@ -6,15 +6,16 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:meta/meta.dart';
-
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
+
+import 'src/closed_caption_file.dart';
+
 export 'package:video_player_platform_interface/video_player_platform_interface.dart'
     show DurationRange, DataSourceType, VideoFormat, VideoPlayerOptions;
 
-import 'src/closed_caption_file.dart';
 export 'src/closed_caption_file.dart';
 
 final VideoPlayerPlatform _videoPlayerPlatform = VideoPlayerPlatform.instance
@@ -37,6 +38,7 @@ class VideoPlayerValue {
     this.isLooping = false,
     this.isBuffering = false,
     this.volume = 1.0,
+    this.speed = 1.0,
     this.errorDescription,
   });
 
@@ -76,6 +78,9 @@ class VideoPlayerValue {
 
   /// The current volume of the playback.
   final double volume;
+
+  /// The current speed of the playback.
+  final double speed;
 
   /// A description of the error if present.
   ///
@@ -119,6 +124,7 @@ class VideoPlayerValue {
     bool isLooping,
     bool isBuffering,
     double volume,
+    double speed,
     String errorDescription,
   }) {
     return VideoPlayerValue(
@@ -131,6 +137,7 @@ class VideoPlayerValue {
       isLooping: isLooping ?? this.isLooping,
       isBuffering: isBuffering ?? this.isBuffering,
       volume: volume ?? this.volume,
+      speed: speed ?? this.speed,
       errorDescription: errorDescription ?? this.errorDescription,
     );
   }
@@ -147,6 +154,7 @@ class VideoPlayerValue {
         'isLooping: $isLooping, '
         'isBuffering: $isBuffering'
         'volume: $volume, '
+        'speed: $speed, '
         'errorDescription: $errorDescription)';
   }
 }
@@ -291,6 +299,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           _applyLooping();
           _applyVolume();
           _applyPlayPause();
+          _applySpeed();
           break;
         case VideoEventType.completed:
           value = value.copyWith(isPlaying: false, position: value.duration);
@@ -410,6 +419,21 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     await _videoPlayerPlatform.setVolume(_textureId, value.volume);
   }
 
+  Future<void> _applySpeed() async {
+    if (!value.initialized || _isDisposed) {
+      return;
+    }
+
+    // On iOS setting the speed on an AVPlayer starts playing
+    // the video straightaway. We avoid this by not changing the speed of
+    // the player until after the video starts playing
+    if (!value.isPlaying) {
+      return;
+    }
+
+    await _videoPlayerPlatform.setSpeed(_textureId, value.speed);
+  }
+
   /// The position in the current video.
   Future<Duration> get position async {
     if (_isDisposed) {
@@ -443,6 +467,16 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   Future<void> setVolume(double volume) async {
     value = value.copyWith(volume: volume.clamp(0.0, 1.0));
     await _applyVolume();
+  }
+
+  /// Sets the playback speed.
+  ///
+  /// By default speed value is 1.0.
+  /// Negative speeds are not supported.
+  /// Speeds above 2x are not supported on iOS.
+  Future<void> setSpeed(double speed) async {
+    value = value.copyWith(speed: speed);
+    await _applySpeed();
   }
 
   /// The closed caption based on the current [position] in the video.

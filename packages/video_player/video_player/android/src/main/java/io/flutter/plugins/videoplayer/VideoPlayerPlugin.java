@@ -18,6 +18,7 @@ import io.flutter.plugins.videoplayer.Messages.PositionMessage;
 import io.flutter.plugins.videoplayer.Messages.TextureMessage;
 import io.flutter.plugins.videoplayer.Messages.VideoPlayerApi;
 import io.flutter.plugins.videoplayer.Messages.VolumeMessage;
+import io.flutter.plugins.videoplayer.Messages.SpeedMessage;
 import io.flutter.view.FlutterMain;
 import io.flutter.view.TextureRegistry;
 
@@ -149,6 +150,11 @@ public class VideoPlayerPlugin implements FlutterPlugin, VideoPlayerApi {
   public void setVolume(VolumeMessage arg) {
     VideoPlayer player = videoPlayers.get(arg.getTextureId());
     player.setVolume(arg.getVolume());
+  }
+
+  public void setSpeed(SpeedMessage arg) {
+    VideoPlayer player = videoPlayers.get(arg.getTextureId());
+    player.setSpeed(arg.getSpeed());
   }
 
   public void play(TextureMessage arg) {

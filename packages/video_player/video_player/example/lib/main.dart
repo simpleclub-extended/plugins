@@ -194,6 +194,12 @@ class _ButterFlyAssetVideoState extends State<_ButterFlyAssetVideo> {
               ),
             ),
           ),
+          MaterialButton(
+            onPressed: () {
+              _controller.setSpeed(2.0);
+            },
+            child: Text('2x'),
+          )
         ],
       ),
     );

@@ -11,6 +11,7 @@ import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.Format;
+import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.Player.EventListener;
 import com.google.android.exoplayer2.SimpleExoPlayer;
@@ -235,6 +236,13 @@ final class VideoPlayer {
 
   void seekTo(int location) {
     exoPlayer.seekTo(location);
+  }
+
+  void setSpeed(double value) {
+    PlaybackParameters existingParam = exoPlayer.getPlaybackParameters();
+    PlaybackParameters newParameter =
+            new PlaybackParameters((float) value, existingParam.pitch, existingParam.skipSilence);
+    exoPlayer.setPlaybackParameters(newParameter);
   }
 
   long getPosition() {
